@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 from collections import deque
-
+import pyautogui
 #default called trackbar function 
 def setValues(x):
    print("")
@@ -50,9 +50,11 @@ cv2.putText(paintWindow, "RED", (420, 33), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 
 cv2.putText(paintWindow, "YELLOW", (520, 33), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (150,150,150), 2, cv2.LINE_AA)
 cv2.namedWindow('Paint', cv2.WINDOW_AUTOSIZE)
 
-
+hi=0
 # Loading the default webcam of PC.
 cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 800)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 500)
 
 # Keep looping
 while True:
@@ -79,19 +81,37 @@ while True:
     frame = cv2.rectangle(frame, (275,1), (370,65), colors[1], -1)
     frame = cv2.rectangle(frame, (390,1), (485,65), colors[2], -1)
     frame = cv2.rectangle(frame, (505,1), (600,65), colors[3], -1)
+    frame = cv2.rectangle(frame, (505,75), (600,140), (255,99,71), -1)
+    frame = cv2.rectangle(frame, (605,75), (700,140), (255,99,71), -1)
     cv2.putText(frame, "CLEAR ALL", (49, 33), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
     cv2.putText(frame, "BLUE", (185, 33), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
     cv2.putText(frame, "GREEN", (298, 33), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
     cv2.putText(frame, "RED", (420, 33), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
     cv2.putText(frame, "YELLOW", (520, 33), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (150,150,150), 2, cv2.LINE_AA)
-
-
-    # Identifying the pointer by making its mask
+    cv2.putText(frame, "CAPTURE ", (520, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
+    cv2.putText(frame, "SCREEN", (520, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
+    cv2.putText(frame, "CLOSE", (620, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
+    #Identifying the pointer by making its mask
     Mask = cv2.inRange(hsv, Lower_hsv, Upper_hsv)
     Mask = cv2.erode(Mask, kernel, iterations=1)
     Mask = cv2.morphologyEx(Mask, cv2.MORPH_OPEN, kernel)
     Mask = cv2.dilate(Mask, kernel, iterations=1)
+    # def preprocess(frame):
 
+    #     blur = cv2.GaussianBlur(frame, (3,3), 0)
+    #     hsv = cv2.cvtColor(blur, cv2.COLOR_BGR2HSV)
+
+    #     lower_color = np.array([5, 20, 60], dtype = "uint8")
+    #     upper_color = np.array([20, 150, 255], dtype = "uint8")
+
+    #     mask = cv2.inRange(hsv, lower_color, upper_color)
+    #     blur = cv2.medianBlur(mask, 5)
+
+    #     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (8, 8))
+    #     hsv_d = cv2.dilate(blur, kernel)
+
+    #     return hsv_d
+    # Mask = preprocess(frame)
     # Find contours for the pointer after idetifying it
     cnts,_ = cv2.findContours(Mask.copy(), cv2.RETR_EXTERNAL,
     	cv2.CHAIN_APPROX_SIMPLE)
@@ -107,7 +127,7 @@ while True:
         cv2.circle(frame, (int(x), int(y)), int(radius), (0, 255, 255), 2)
         # Calculating the center of the detected contour
         M = cv2.moments(cnt)
-        center = (int(M['m10'] / M['m00']), int(M['m01'] / M['m00']))
+        center = (int(M['m10'] / M['m00']), int(M['m01'] / M['m00']))#centroid calculation
 
         # Now checking if the user wants to click on any button above the screen 
         if center[1] <= 65:
@@ -131,6 +151,19 @@ while True:
                     colorIndex = 2 # Red
             elif 505 <= center[0] <= 600:
                     colorIndex = 3 # Yellow
+        elif 505 <= center[0] <= 600 and 75 <=center[1] <= 140:
+            cv2.waitKey(1)
+            image = pyautogui.screenshot(region=(0,0, 800, 500))
+            image = cv2.cvtColor(np.array(image),
+                     cv2.COLOR_RGB2BGR)
+   
+# writing it to the disk using opencv
+            hi=hi+1
+            cv2.imwrite(f"image{hi}.jpg", image)
+        elif 605 <= center[0] <= 700 and 75 <=center[1] <= 140:
+                	# If the 'q' key is pressed then stop the application 
+            # if cv2.waitKey(1) & 0xFF == ord("q"):
+            break
         else :
             if colorIndex == 0:
                 bpoints[blue_index].appendleft(center)
