@@ -2,6 +2,9 @@ import numpy as np
 import cv2
 from collections import deque
 import pyautogui
+import mediapipe as mp
+mp_drawing = mp.solutions.drawing_utils
+mp_hands = mp.solutions.hands
 #default called trackbar function 
 def setValues(x):
    print("")
@@ -96,22 +99,7 @@ while True:
     Mask = cv2.erode(Mask, kernel, iterations=1)
     Mask = cv2.morphologyEx(Mask, cv2.MORPH_OPEN, kernel)
     Mask = cv2.dilate(Mask, kernel, iterations=1)
-    # def preprocess(frame):
-
-    #     blur = cv2.GaussianBlur(frame, (3,3), 0)
-    #     hsv = cv2.cvtColor(blur, cv2.COLOR_BGR2HSV)
-
-    #     lower_color = np.array([5, 20, 60], dtype = "uint8")
-    #     upper_color = np.array([20, 150, 255], dtype = "uint8")
-
-    #     mask = cv2.inRange(hsv, lower_color, upper_color)
-    #     blur = cv2.medianBlur(mask, 5)
-
-    #     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (8, 8))
-    #     hsv_d = cv2.dilate(blur, kernel)
-
-    #     return hsv_d
-    # Mask = preprocess(frame)
+   
     # Find contours for the pointer after idetifying it
     cnts,_ = cv2.findContours(Mask.copy(), cv2.RETR_EXTERNAL,
     	cv2.CHAIN_APPROX_SIMPLE)
@@ -157,12 +145,13 @@ while True:
             image = cv2.cvtColor(np.array(image),
                      cv2.COLOR_RGB2BGR)
    
-# writing it to the disk using opencv
+            # writing it to the disk using opencv
             hi=hi+1
             cv2.imwrite(f"image{hi}.jpg", image)
         elif 605 <= center[0] <= 700 and 75 <=center[1] <= 140:
                 	# If the 'q' key is pressed then stop the application 
             # if cv2.waitKey(1) & 0xFF == ord("q"):
+            
             break
         else :
             if colorIndex == 0:
@@ -173,7 +162,7 @@ while True:
                 rpoints[red_index].appendleft(center)
             elif colorIndex == 3:
                 ypoints[yellow_index].appendleft(center)
-    # Append the next deques when nothing is detected to avois messing up
+        # Append the next deques when nothing is detected to avois messing up
     else:
         bpoints.append(deque(maxlen=512))
         blue_index += 1
@@ -189,9 +178,11 @@ while True:
     for i in range(len(points)):
         for j in range(len(points[i])):
             for k in range(1, len(points[i][j])):
+                print(points[i][j][k])
                 if points[i][j][k - 1] is None or points[i][j][k] is None:
                     continue
                 cv2.line(frame, points[i][j][k - 1], points[i][j][k], colors[i], 2)
+                print("Drawing")
                 cv2.line(paintWindow, points[i][j][k - 1], points[i][j][k], colors[i], 2)
 
     # Show all the windows
